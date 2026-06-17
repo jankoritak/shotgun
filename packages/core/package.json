@@ -1,0 +1,24 @@
+{
+  "name": "@shotgun/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "X API client, OAuth 1.0a signing, and BYOK config for Shotgun. No Claude Code / MCP knowledge.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test src/*.test.ts"
+  }
+}

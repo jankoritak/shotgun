@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "shotgun": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/bin/mcp-server.js"],
+      "env": {
+        "SHOTGUN_X_API_KEY": "${SHOTGUN_X_API_KEY}",
+        "SHOTGUN_X_API_SECRET": "${SHOTGUN_X_API_SECRET}",
+        "SHOTGUN_X_ACCESS_TOKEN": "${SHOTGUN_X_ACCESS_TOKEN}",
+        "SHOTGUN_X_ACCESS_SECRET": "${SHOTGUN_X_ACCESS_SECRET}",
+        "SHOTGUN_DRY_RUN": "${SHOTGUN_DRY_RUN}"
+      }
+    }
+  }
+}

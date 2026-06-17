@@ -1,0 +1,17 @@
+{
+  "name": "@shotgun/plugin",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The distributable Shotgun Claude Code plugin. Bundles the MCP server to a self-contained bin/.",
+  "license": "MIT",
+  "scripts": {
+    "build": "esbuild ../packages/mcp-server/src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=bin/mcp-server.js",
+    "validate": "claude plugin validate ."
+  },
+  "dependencies": {
+    "@shotgun/mcp-server": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}
