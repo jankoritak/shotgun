@@ -6,7 +6,7 @@ OSS, bring-your-own-keys, write-only, local-only. No backend. The plugin runs in
 
 ## Requirements
 
-- Node 20+ and pnpm (only for the source install).
+- Node 20+ on your PATH. The plugin runs its bundled server with `node`, so this is required for both install methods (pnpm is needed only for the source install).
 - An X *developer* account ([developer.x.com](https://developer.x.com)), not just a regular X account.
 - A small amount of API credits on that account. Posting is pay-per-use, about $0.01 per post.
 
