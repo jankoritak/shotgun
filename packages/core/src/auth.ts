@@ -4,7 +4,7 @@ import type { XCredentials } from "./types.js";
 /**
  * OAuth 1.0a user-context signing for the X API.
  *
- * Implemented from scratch (node:crypto only) so @shotgun/core stays
+ * Implemented from scratch (node:crypto only) so @bullhorn/core stays
  * dependency-free and bundles cleanly. Follows RFC 5849.
  *
  * Note on JSON bodies: X API v2 `POST /2/tweets` sends a JSON body, which is

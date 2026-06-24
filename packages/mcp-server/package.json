@@ -1,12 +1,12 @@
 {
-  "name": "@shotgun/mcp-server",
-  "version": "0.0.0",
+  "name": "@bullhorn/mcp-server",
+  "version": "0.1.0",
   "private": true,
-  "description": "stdio MCP server exposing Shotgun's write-only X post tools. Wraps @shotgun/core.",
+  "description": "stdio MCP server exposing Bullhorn's write-only post tools. Wraps @bullhorn/core.",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "shotgun-mcp": "./dist/index.js"
+    "bullhorn-mcp": "./dist/index.js"
   },
   "exports": {
     ".": {
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
-    "@shotgun/core": "workspace:*",
+    "@bullhorn/core": "workspace:*",
     "zod": "^3.23.0"
   }
 }

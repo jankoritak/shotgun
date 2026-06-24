@@ -1,17 +1,45 @@
 {
-  "name": "@shotgun/plugin",
-  "version": "0.0.0",
-  "private": true,
-  "description": "The distributable Shotgun Claude Code plugin. Bundles the MCP server to a self-contained bin/.",
+  "name": "@jankoritak/claude-bullhorn",
+  "version": "0.1.0",
+  "description": "Post to X from inside Claude Code. Draft from your session, review, approve, post. BYOK, write-only, local-only.",
   "license": "MIT",
+  "author": {
+    "name": "Jan Koriťák",
+    "url": "https://github.com/jankoritak"
+  },
+  "homepage": "https://github.com/jankoritak/bullhorn",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jankoritak/bullhorn.git",
+    "directory": "plugin"
+  },
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "twitter",
+    "x",
+    "social",
+    "build-in-public",
+    "byok"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    ".claude-plugin",
+    ".mcp.json",
+    "bin",
+    "commands",
+    "hooks"
+  ],
   "scripts": {
     "build": "esbuild ../packages/mcp-server/src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=bin/mcp-server.js",
+    "prepublishOnly": "pnpm build",
     "validate": "claude plugin validate ."
   },
-  "dependencies": {
-    "@shotgun/mcp-server": "workspace:*"
-  },
   "devDependencies": {
+    "@bullhorn/core": "workspace:*",
+    "@bullhorn/mcp-server": "workspace:*",
     "esbuild": "^0.24.0"
   }
 }

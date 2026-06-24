@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { loadConfig } from "@shotgun/core";
+import { loadConfig } from "@bullhorn/core";
 import { createServer } from "./server.js";
 
 /**
@@ -16,7 +16,7 @@ async function main(): Promise<void> {
 
 main().catch((error) => {
   // stdout is the MCP channel; diagnostics must go to stderr.
-  console.error("[shotgun] fatal:", error);
+  console.error("[bullhorn] fatal:", error);
   process.exit(1);
 });
 

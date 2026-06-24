@@ -1,8 +1,8 @@
 {
-  "name": "@shotgun/core",
-  "version": "0.0.0",
+  "name": "@bullhorn/core",
+  "version": "0.1.0",
   "private": true,
-  "description": "X API client, OAuth 1.0a signing, and BYOK config for Shotgun. No Claude Code / MCP knowledge.",
+  "description": "Platform adapters (X first), OAuth 1.0a signing, and BYOK config for Bullhorn. No Claude Code / MCP knowledge.",
   "license": "MIT",
   "type": "module",
   "exports": {

@@ -1,18 +1,19 @@
 {
-  "name": "shotgun",
-  "version": "0.0.0",
-  "description": "Post to X (Twitter) straight from Claude Code. Draft from your session context, review, approve, post. BYOK, write-only, local-only.",
+  "name": "bullhorn",
+  "version": "0.1.0",
+  "description": "Post to X straight from Claude Code. Draft from your session, review, approve, post. BYOK, write-only, local-only.",
   "author": {
     "name": "Jan Koriťák"
   },
   "license": "MIT",
   "keywords": [
+    "claude-code",
+    "social",
     "twitter",
     "x",
-    "social",
     "build-in-public",
     "byok"
   ],
-  "homepage": "https://github.com/jankoritak/shotgun",
-  "repository": "https://github.com/jankoritak/shotgun"
+  "homepage": "https://github.com/jankoritak/bullhorn",
+  "repository": "https://github.com/jankoritak/bullhorn"
 }

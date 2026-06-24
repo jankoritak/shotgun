@@ -1,8 +1,8 @@
 {
-  "name": "shotgun",
-  "version": "0.0.0",
+  "name": "bullhorn",
+  "version": "0.1.0",
   "private": true,
-  "description": "Post to X (Twitter) straight from Claude Code — OSS, BYOK, write-only plugin.",
+  "description": "Post to X straight from Claude Code — OSS, BYOK, write-only plugin.",
   "license": "MIT",
   "packageManager": "pnpm@10.19.0",
   "engines": {

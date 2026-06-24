@@ -1,12 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import {
-  XClient,
-  TweetValidationError,
-  tweetLength,
-  validateTweetText,
-} from "./x-client.js";
-import type { ShotgunConfig, XCredentials } from "./types.js";
+import { XAdapter, textLength } from "./x-adapter.js";
+import { PostValidationError } from "./platform.js";
+import type { BullhornConfig, XCredentials } from "./types.js";
 
 const CREDS: XCredentials = {
   apiKey: "ak",
@@ -15,15 +11,23 @@ const CREDS: XCredentials = {
   accessSecret: "ats",
 };
 
-test("tweetLength counts code points, not UTF-16 units", () => {
-  assert.equal(tweetLength("hello"), 5);
-  assert.equal(tweetLength("🚀🚀"), 2); // 4 UTF-16 units, 2 code points
+const live = (
+  fetchImpl?: typeof fetch,
+): [BullhornConfig, { fetch?: typeof fetch }] => [
+  { dryRun: false, credentials: { x: CREDS } },
+  fetchImpl ? { fetch: fetchImpl } : {},
+];
+
+test("textLength counts code points, not UTF-16 units", () => {
+  assert.equal(textLength("hello"), 5);
+  assert.equal(textLength("🚀🚀"), 2); // 4 UTF-16 units, 2 code points
 });
 
-test("validateTweetText rejects empty and over-limit text", () => {
-  assert.throws(() => validateTweetText("   "), TweetValidationError);
-  assert.throws(() => validateTweetText("x".repeat(281)), TweetValidationError);
-  assert.doesNotThrow(() => validateTweetText("x".repeat(280)));
+test("validate rejects empty and over-limit text", () => {
+  const adapter = new XAdapter({ dryRun: true, credentials: { x: CREDS } });
+  assert.throws(() => adapter.validate("   "), PostValidationError);
+  assert.throws(() => adapter.validate("x".repeat(281)), PostValidationError);
+  assert.doesNotThrow(() => adapter.validate("x".repeat(280)));
 });
 
 test("dry-run renders without calling fetch", async () => {
@@ -33,9 +37,11 @@ test("dry-run renders without calling fetch", async () => {
     return new Response();
   }) as unknown as typeof fetch;
 
-  const config: ShotgunConfig = { dryRun: true, credentials: CREDS };
-  const client = new XClient(config, { fetch: fetchSpy });
-  const result = await client.postTweet("hello world");
+  const adapter = new XAdapter(
+    { dryRun: true, credentials: { x: CREDS } },
+    { fetch: fetchSpy },
+  );
+  const result = await adapter.post("hello world");
 
   assert.equal(called, false);
   assert.deepEqual(result, {
@@ -44,6 +50,14 @@ test("dry-run renders without calling fetch", async () => {
     text: "hello world",
     dryRun: true,
   });
+});
+
+test("missing credentials force dry-run even when dryRun is false", async () => {
+  const adapter = new XAdapter({ dryRun: false, credentials: {} });
+  assert.equal(adapter.dryRun, true);
+  const result = await adapter.post("hello");
+  assert.equal(result.dryRun, true);
+  assert.equal(result.id, null);
 });
 
 test("live post sends signed request and returns url", async () => {
@@ -55,9 +69,8 @@ test("live post sends signed request and returns url", async () => {
     });
   }) as unknown as typeof fetch;
 
-  const config: ShotgunConfig = { dryRun: false, credentials: CREDS };
-  const client = new XClient(config, { fetch: fetchSpy });
-  const result = await client.postTweet("hello world");
+  const adapter = new XAdapter(...live(fetchSpy));
+  const result = await adapter.post("hello world");
 
   assert.equal(calls.length, 1);
   assert.equal(calls[0]!.url, "https://api.twitter.com/2/tweets");
@@ -75,7 +88,7 @@ test("live post sends signed request and returns url", async () => {
   });
 });
 
-test("thread chains replies to the previous tweet id", async () => {
+test("thread chains replies to the previous post id", async () => {
   let counter = 0;
   const bodies: Array<Record<string, unknown>> = [];
   const fetchSpy = (async (_url: string, init: RequestInit) => {
@@ -86,35 +99,33 @@ test("thread chains replies to the previous tweet id", async () => {
     });
   }) as unknown as typeof fetch;
 
-  const config: ShotgunConfig = { dryRun: false, credentials: CREDS };
-  const client = new XClient(config, { fetch: fetchSpy });
-  const result = await client.postThread(["one", "two", "three"]);
+  const adapter = new XAdapter(...live(fetchSpy));
+  const result = await adapter.postThread(["one", "two", "three"]);
 
-  assert.equal(result.tweets.length, 3);
+  assert.equal(result.posts.length, 3);
   assert.equal(bodies[0]!["reply"], undefined);
   assert.deepEqual(bodies[1]!["reply"], { in_reply_to_tweet_id: "id1" });
   assert.deepEqual(bodies[2]!["reply"], { in_reply_to_tweet_id: "id2" });
   assert.deepEqual(
-    result.tweets.map((t) => t.id),
+    result.posts.map((p) => p.id),
     ["id1", "id2", "id3"],
   );
 });
 
-test("thread validates all tweets before posting any", async () => {
+test("thread validates all posts before posting any", async () => {
   let called = false;
   const fetchSpy = (async () => {
     called = true;
     return new Response(JSON.stringify({ data: { id: "x" } }), { status: 201 });
   }) as unknown as typeof fetch;
 
-  const config: ShotgunConfig = { dryRun: false, credentials: CREDS };
-  const client = new XClient(config, { fetch: fetchSpy });
+  const adapter = new XAdapter(...live(fetchSpy));
 
   await assert.rejects(
-    () => client.postThread(["ok", "x".repeat(281)]),
-    TweetValidationError,
+    () => adapter.postThread(["ok", "x".repeat(281)]),
+    PostValidationError,
   );
-  assert.equal(called, false, "no tweet should post if any is invalid");
+  assert.equal(called, false, "no post should send if any is invalid");
 });
 
 test("non-2xx response throws with status detail", async () => {
@@ -124,7 +135,6 @@ test("non-2xx response throws with status detail", async () => {
       statusText: "Too Many Requests",
     })) as unknown as typeof fetch;
 
-  const config: ShotgunConfig = { dryRun: false, credentials: CREDS };
-  const client = new XClient(config, { fetch: fetchSpy });
-  await assert.rejects(() => client.postTweet("hi"), /429/);
+  const adapter = new XAdapter(...live(fetchSpy));
+  await assert.rejects(() => adapter.post("hi"), /429/);
 });

@@ -28,3 +28,7 @@ build/
 *.log
 npm-debug.log*
 pnpm-debug.log*
+
+# Local tooling artifacts (browser session dumps, scratch)
+.playwright-mcp/
+/test

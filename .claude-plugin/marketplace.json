@@ -1,24 +1,28 @@
 {
-  "name": "shotgun",
+  "name": "bullhorn",
   "owner": {
     "name": "Jan Koriťák",
     "url": "https://github.com/jankoritak"
   },
   "metadata": {
-    "description": "Post to X (Twitter) straight from Claude Code — draft from your session context, review, approve, post.",
-    "version": "0.0.0"
+    "description": "Post to X straight from Claude Code — draft from your session, review, approve, post.",
+    "version": "0.1.0"
   },
   "plugins": [
     {
-      "name": "shotgun",
-      "source": "./plugin",
-      "description": "OSS, BYOK, write-only Claude Code plugin: draft tweets from your current context and post to your own X account. Local-only, no backend.",
-      "version": "0.0.0",
+      "name": "bullhorn",
+      "source": {
+        "source": "npm",
+        "package": "@jankoritak/claude-bullhorn",
+        "version": "^0.1.0"
+      },
+      "description": "OSS, BYOK, write-only Claude Code plugin: draft posts from your current context and post to your own X account. Local-only, no backend.",
+      "version": "0.1.0",
       "author": {
         "name": "Jan Koriťák"
       },
       "license": "MIT",
-      "homepage": "https://github.com/jankoritak/shotgun",
+      "homepage": "https://github.com/jankoritak/bullhorn",
       "keywords": [
         "twitter",
         "x",

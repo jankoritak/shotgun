@@ -13016,19 +13016,18 @@ var StdioServerTransport = class {
   }
 };
 
-// ../packages/core/dist/types.js
-var TWEET_MAX_LENGTH = 280;
-
 // ../packages/core/dist/config.js
-var CREDENTIAL_ENV_KEYS = {
-  apiKey: "SHOTGUN_X_API_KEY",
-  apiSecret: "SHOTGUN_X_API_SECRET",
-  accessToken: "SHOTGUN_X_ACCESS_TOKEN",
-  accessSecret: "SHOTGUN_X_ACCESS_SECRET"
+var X_CREDENTIAL_ENV_KEYS = {
+  apiKey: "BULLHORN_X_API_KEY",
+  apiSecret: "BULLHORN_X_API_SECRET",
+  accessToken: "BULLHORN_X_ACCESS_TOKEN",
+  accessSecret: "BULLHORN_X_ACCESS_SECRET"
 };
-var DRY_RUN_ENV_KEY = "SHOTGUN_DRY_RUN";
-function missingCredentialKeys(env) {
-  return Object.values(CREDENTIAL_ENV_KEYS).filter((key) => {
+var DRY_RUN_ENV_KEY = "BULLHORN_DRY_RUN";
+function missingCredentialKeys(env, platform = "x") {
+  if (platform !== "x")
+    return [];
+  return Object.values(X_CREDENTIAL_ENV_KEYS).filter((key) => {
     const value = env[key];
     return value === void 0 || value.trim() === "";
   });
@@ -13045,21 +13044,21 @@ function parseBoolean(value) {
     return false;
   return void 0;
 }
-function loadConfig(env = process.env) {
-  const missing = missingCredentialKeys(env);
-  const hasCredentials = missing.length === 0;
-  const explicit = parseBoolean(env[DRY_RUN_ENV_KEY]);
-  const dryRun = hasCredentials ? explicit ?? false : true;
-  if (!hasCredentials) {
-    return { dryRun };
-  }
-  const credentials = {
-    apiKey: env[CREDENTIAL_ENV_KEYS.apiKey],
-    apiSecret: env[CREDENTIAL_ENV_KEYS.apiSecret],
-    accessToken: env[CREDENTIAL_ENV_KEYS.accessToken],
-    accessSecret: env[CREDENTIAL_ENV_KEYS.accessSecret]
+function loadXCredentials(env) {
+  if (missingCredentialKeys(env, "x").length > 0)
+    return void 0;
+  return {
+    apiKey: env[X_CREDENTIAL_ENV_KEYS.apiKey],
+    apiSecret: env[X_CREDENTIAL_ENV_KEYS.apiSecret],
+    accessToken: env[X_CREDENTIAL_ENV_KEYS.accessToken],
+    accessSecret: env[X_CREDENTIAL_ENV_KEYS.accessSecret]
   };
-  return { credentials, dryRun };
+}
+function loadConfig(env = process.env) {
+  const x = loadXCredentials(env);
+  const explicit = parseBoolean(env[DRY_RUN_ENV_KEY]);
+  const dryRun = x ? explicit ?? false : true;
+  return { credentials: { x }, dryRun };
 }
 
 // ../packages/core/dist/auth.js
@@ -13098,68 +13097,76 @@ function computeSignature(method, url, params, creds) {
   return (0, import_node_crypto.createHmac)("sha1", signingKey).update(baseString).digest("base64");
 }
 
-// ../packages/core/dist/x-client.js
+// ../packages/core/dist/platform.js
+var PostValidationError = class extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "PostValidationError";
+  }
+};
+var DEFAULT_PLATFORM = "x";
+var SUPPORTED_PLATFORMS = ["x"];
+
+// ../packages/core/dist/x-adapter.js
+var X_MAX_LENGTH = 280;
 var TWEETS_ENDPOINT = "https://api.twitter.com/2/tweets";
 function tweetUrl(id) {
   return `https://x.com/i/web/status/${id}`;
 }
-function tweetLength(text) {
+function textLength(text) {
   return [...text].length;
 }
-var TweetValidationError = class extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "TweetValidationError";
-  }
-};
-function validateTweetText(text) {
-  if (text.trim().length === 0) {
-    throw new TweetValidationError("Tweet text is empty.");
-  }
-  const length = tweetLength(text);
-  if (length > TWEET_MAX_LENGTH) {
-    throw new TweetValidationError(`Tweet is ${length} characters; the limit is ${TWEET_MAX_LENGTH}.`);
-  }
-}
-var XClient = class {
-  config;
+var XAdapter = class {
+  id = "x";
+  name = "X (Twitter)";
+  maxLength = X_MAX_LENGTH;
+  creds;
+  _dryRun;
   fetchImpl;
   constructor(config2, deps = {}) {
-    this.config = config2;
+    this.creds = config2.credentials?.x;
+    this._dryRun = config2.dryRun || !this.creds;
     this.fetchImpl = deps.fetch ?? globalThis.fetch;
   }
-  /** True when posts will be rendered but not sent. */
   get dryRun() {
-    return this.config.dryRun;
+    return this._dryRun;
   }
-  /** Post a single tweet, optionally as a reply (used to chain threads). */
-  async postTweet(text, inReplyToId) {
-    validateTweetText(text);
-    if (this.config.dryRun || !this.config.credentials) {
+  validate(text) {
+    if (text.trim().length === 0) {
+      throw new PostValidationError("Post text is empty.");
+    }
+    const length = textLength(text);
+    if (length > this.maxLength) {
+      throw new PostValidationError(`Post is ${length} characters; the X limit is ${this.maxLength}.`);
+    }
+  }
+  async post(text, inReplyToId) {
+    this.validate(text);
+    if (this._dryRun || !this.creds) {
       return { id: null, url: null, text, dryRun: true };
     }
-    const id = await this.send(text, this.config.credentials, inReplyToId);
+    const id = await this.send(text, this.creds, inReplyToId);
     return { id, url: tweetUrl(id), text, dryRun: false };
   }
   /**
-   * Post a thread: the first tweet stands alone, each subsequent tweet replies
-   * to the one before it. Validates every tweet up front so a thread never
-   * posts half-way before discovering tweet 4 is too long.
+   * Post a thread: the first post stands alone, each subsequent post replies to
+   * the one before it. Validates every post up front so a thread never posts
+   * half-way before discovering post 4 is too long.
    */
   async postThread(texts) {
     if (texts.length === 0) {
-      throw new TweetValidationError("Thread has no tweets.");
+      throw new PostValidationError("Thread has no posts.");
     }
     for (const text of texts)
-      validateTweetText(text);
-    const results = [];
+      this.validate(text);
+    const posts = [];
     let previousId;
     for (const text of texts) {
-      const result = await this.postTweet(text, previousId);
-      results.push(result);
+      const result = await this.post(text, previousId);
+      posts.push(result);
       previousId = result.id ?? previousId;
     }
-    return { tweets: results, dryRun: this.config.dryRun };
+    return { posts, dryRun: this._dryRun };
   }
   async send(text, creds, inReplyToId) {
     const body = { text };
@@ -13187,6 +13194,16 @@ var XClient = class {
     return id;
   }
 };
+
+// ../packages/core/dist/registry.js
+function createAdapter(platform, config2, deps = {}) {
+  switch (platform) {
+    case "x":
+      return new XAdapter(config2, deps);
+    default:
+      throw new PostValidationError(`Unknown platform "${platform}". Supported: ${SUPPORTED_PLATFORMS.join(", ")}.`);
+  }
+}
 
 // ../node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/external.js
 var external_exports = {};
@@ -21290,68 +21307,79 @@ function describe(text, url, dryRun) {
   if (dryRun) return `[DRY RUN] Would post: ${JSON.stringify(text)}`;
   return `Posted: ${url}`;
 }
-async function handlePostTweet(client, text) {
+async function handlePost(config2, platform, text, deps = {}) {
   try {
-    const result = await client.postTweet(text);
-    return ok(describe(result.text, result.url, result.dryRun), { ...result });
+    const adapter = createAdapter(platform, config2, deps);
+    const result = await adapter.post(text);
+    return ok(describe(result.text, result.url, result.dryRun), {
+      ...result,
+      platform: adapter.id
+    });
   } catch (error2) {
     return fail(toMessage(error2));
   }
 }
-async function handlePostThread(client, tweets) {
+async function handlePostThread(config2, platform, texts, deps = {}) {
   try {
-    const result = await client.postThread(tweets);
-    const lines = result.tweets.map(
-      (t, i) => `${i + 1}. ${describe(t.text, t.url, t.dryRun)}`
+    const adapter = createAdapter(platform, config2, deps);
+    const result = await adapter.postThread(texts);
+    const lines = result.posts.map(
+      (p, i) => `${i + 1}. ${describe(p.text, p.url, p.dryRun)}`
     );
-    const header = result.dryRun ? `[DRY RUN] Would post a ${result.tweets.length}-tweet thread:` : `Posted a ${result.tweets.length}-tweet thread:`;
+    const header = result.dryRun ? `[DRY RUN] Would post a ${result.posts.length}-post thread:` : `Posted a ${result.posts.length}-post thread:`;
     return ok([header, ...lines].join("\n"), {
-      tweets: result.tweets,
-      dryRun: result.dryRun
+      posts: result.posts,
+      dryRun: result.dryRun,
+      platform: adapter.id
     });
   } catch (error2) {
     return fail(toMessage(error2));
   }
 }
 function toMessage(error2) {
-  if (error2 instanceof TweetValidationError) return `Validation error: ${error2.message}`;
+  if (error2 instanceof PostValidationError) return `Validation error: ${error2.message}`;
   if (error2 instanceof Error) return error2.message;
   return String(error2);
 }
 
 // ../packages/mcp-server/src/server.ts
-var SERVER_NAME = "shotgun";
-var SERVER_VERSION = "0.0.0";
+var SERVER_NAME = "bullhorn";
+var SERVER_VERSION = "0.1.0";
+var PLATFORM_LIST = SUPPORTED_PLATFORMS.join(", ");
+var platformParam = external_exports.enum(SUPPORTED_PLATFORMS).default(DEFAULT_PLATFORM).describe(
+  `Which platform to post to. One of: ${PLATFORM_LIST}. Defaults to "${DEFAULT_PLATFORM}".`
+);
 function createServer(config2) {
-  const client = new XClient(config2);
   const server = new McpServer({
     name: SERVER_NAME,
     version: SERVER_VERSION
   });
-  const dryNote = config2.dryRun ? " The server is in DRY-RUN mode: this will render the post but NOT send it to X." : "";
+  const dryNote = config2.dryRun ? " The server is in DRY-RUN mode: this will render the post but NOT send it." : "";
   server.registerTool(
-    "post_tweet",
+    "post",
     {
-      title: "Post Tweet",
-      description: `Post a single tweet to the user's X (Twitter) account. Only call this after the user has explicitly approved the exact text. Max ${TWEET_MAX_LENGTH} characters.${dryNote}`,
+      title: "Post",
+      description: `Post a single item to one of the user's social accounts. Only call this after the user has explicitly approved the exact text. X posts max ${X_MAX_LENGTH} characters.${dryNote}`,
       inputSchema: {
-        text: external_exports.string().min(1).describe("The exact tweet text to post, already approved by the user.")
+        text: external_exports.string().min(1).describe("The exact post text, already approved by the user."),
+        platform: platformParam
       }
     },
-    async ({ text }) => handlePostTweet(client, text)
+    async ({ text, platform }) => handlePost(config2, platform, text)
   );
   server.registerTool(
     "post_thread",
     {
       title: "Post Thread",
-      description: `Post a thread of tweets to the user's X account as a reply-chain. Only call this after the user has explicitly approved every tweet. Each tweet max ${TWEET_MAX_LENGTH} characters.${dryNote}`,
+      description: `Post a thread to one of the user's social accounts as a reply-chain. Only call this after the user has explicitly approved every post. On X each post is max ${X_MAX_LENGTH} characters.${dryNote}`,
       inputSchema: {
-        tweets: external_exports.array(external_exports.string().min(1)).min(1).describe(
-          "The ordered tweets of the thread, each already approved by the user."
-        )
+        posts: external_exports.array(external_exports.string().min(1)).min(1).describe(
+          "The ordered posts of the thread, each already approved by the user."
+        ),
+        platform: platformParam
       }
     },
-    async ({ tweets }) => handlePostThread(client, tweets)
+    async ({ posts, platform }) => handlePostThread(config2, platform, posts)
   );
   return server;
 }
@@ -21364,7 +21392,7 @@ async function main() {
   await server.connect(transport);
 }
 main().catch((error2) => {
-  console.error("[shotgun] fatal:", error2);
+  console.error("[bullhorn] fatal:", error2);
   process.exit(1);
 });
 // Annotate the CommonJS export names for ESM import in node:
