@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Post to X straight from Claude Code — draft from your session, review, approve, post.",
-    "version": "0.1.2"
+    "version": "0.1.1"
   },
   "plugins": [
     {
@@ -17,7 +17,7 @@
         "version": "^0.1.0"
       },
       "description": "OSS, BYOK, write-only Claude Code plugin: draft posts from your current context and post to your own X account. Local-only, no backend.",
-      "version": "0.1.2",
+      "version": "0.1.1",
       "author": {
         "name": "Jan Koriťák"
       },

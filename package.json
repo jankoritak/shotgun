@@ -1,6 +1,6 @@
 {
   "name": "bullhorn",
-  "version": "0.1.2",
+  "version": "0.1.1",
   "private": true,
   "description": "Post to X straight from Claude Code — OSS, BYOK, write-only plugin.",
   "license": "MIT",

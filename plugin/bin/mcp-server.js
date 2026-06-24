@@ -21344,7 +21344,7 @@ function toMessage(error2) {
 
 // ../packages/mcp-server/src/server.ts
 var SERVER_NAME = "bullhorn";
-var SERVER_VERSION = "0.1.2";
+var SERVER_VERSION = "0.1.1";
 var PLATFORM_LIST = SUPPORTED_PLATFORMS.join(", ");
 var platformParam = external_exports.enum(SUPPORTED_PLATFORMS).default(DEFAULT_PLATFORM).describe(
   `Which platform to post to. One of: ${PLATFORM_LIST}. Defaults to "${DEFAULT_PLATFORM}".`

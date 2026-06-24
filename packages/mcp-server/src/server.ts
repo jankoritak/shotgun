@@ -5,7 +5,7 @@ import type { BullhornConfig } from "@bullhorn/core";
 import { handlePost, handlePostThread } from "./handlers.js";
 
 export const SERVER_NAME = "bullhorn";
-export const SERVER_VERSION = "0.1.2";
+export const SERVER_VERSION = "0.1.1";
 
 const PLATFORM_LIST = SUPPORTED_PLATFORMS.join(", ");
 

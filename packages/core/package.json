@@ -1,6 +1,6 @@
 {
   "name": "@bullhorn/core",
-  "version": "0.1.2",
+  "version": "0.1.1",
   "private": true,
   "description": "Platform adapters (X first), OAuth 1.0a signing, and BYOK config for Bullhorn. No Claude Code / MCP knowledge.",
   "license": "MIT",
