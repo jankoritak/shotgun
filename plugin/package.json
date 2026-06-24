@@ -1,6 +1,6 @@
 {
   "name": "@jankoritak/claude-bullhorn",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Post to X from inside Claude Code. Draft from your session, review, approve, post. BYOK, write-only, local-only.",
   "license": "MIT",
   "author": {

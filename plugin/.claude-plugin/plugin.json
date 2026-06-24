@@ -1,6 +1,6 @@
 {
   "name": "bullhorn",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Post to X straight from Claude Code. Draft from your session, review, approve, post. BYOK, write-only, local-only.",
   "author": {
     "name": "Jan Koriťák"
