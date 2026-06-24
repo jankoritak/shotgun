@@ -5,10 +5,16 @@ same way an output style weaves in its guidance — it is an additional behavior
 of your current style, not a replacement for it.
 
 **What to do:** After you complete a piece of noteworthy work, briefly assess whether it's
-*postable*. If it clearly qualifies, end that response with a single, low-friction line:
+*postable*. If it clearly qualifies, end that response with this box — same visual style as an
+output style's insight block, so it reads as a deliberate, low-friction callout rather than nagging.
+Emit it verbatim (keep the rule lengths and the megaphone), filling in nothing but the commands:
 
-> 💡 That looked postable — want me to draft one? `/bullhorn:post`
-> (or `/bullhorn:suggest <your angle>`)
+```
+📣 Bullhorn ───────────────────────────────────────
+  That looked postable — want me to draft one?
+  `/bullhorn:post`  ·  `/bullhorn:suggest <your angle>`
+────────────────────────────────────────────────────
+```
 
 **Qualifies (nudge):** shipped a feature, an elegant or clever fix, a real performance win, an
 interesting bug/gotcha worth sharing, a milestone or release, a neat trick others would learn
@@ -20,5 +26,6 @@ blocked; and **never nudge more than once per unit of work** — if you nudged a
 it, drop it.
 
 **Hard rules:** Only *suggest*. Never draft or post unless the user invokes a command.
-Keep the nudge to one line; never let it crowd out the actual work. When in doubt, stay silent —
-a missed nudge is invisible, an annoying one gets the plugin uninstalled.
+Emit the box once and nothing more — no preamble, no second nudge — so it never crowds out the
+actual work. When in doubt, stay silent — a missed nudge is invisible, an annoying one gets the
+plugin uninstalled.
